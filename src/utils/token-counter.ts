@@ -10,6 +10,7 @@ export class TokenCounter {
     try {
       return encoding_for_model(model);
     } catch (error) {
+      console.error(`Error checking if file is text: ${error}`);
       return get_encoding('cl100k_base');  // fallback to base encoding
     }
   }

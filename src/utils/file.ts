@@ -13,6 +13,7 @@ export class FileUtils {
       }
       return true;
     } catch (error) {
+      console.error(`Error checking if file is text: ${error}`);
       return false;
     }
   }
