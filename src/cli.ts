@@ -1,9 +1,9 @@
 #!/usr/bin/env node
+
 import { Command } from 'commander';
-import { analyze } from './index';
+import { analyze, AnalyzeOptions } from './index';
 import path from 'path';
 import fs from 'fs-extra';
-
 async function main() {
     const program = new Command();
 
@@ -14,21 +14,17 @@ async function main() {
         .option('-o, --output <path>', 'Output file path')
         .option('-e, --exclude <patterns...>', 'Additional patterns to exclude')
         .option('-i, --include <patterns...>', 'Patterns to include')
-        .action(async (directory: string, options: any) => {
+        .action(async (directory: string, options: AnalyzeOptions) => {
             try {
-                // Get the current working directory
+                // Resolve project directory
                 const projectDir = path.resolve(directory);
-                
-                // Get the project name from package.json if exists, otherwise use directory name
-                let projectName = path.basename(projectDir);
-                try {
-                    const packageJson = require(path.join(projectDir, 'package.json'));
-                    projectName = packageJson.name;
-                } catch {
-                    // Keep using directory name if package.json not found
-                }
 
-                // Sanitize project name for filename
+                // Get project name from package.json or fallback to directory name
+                const packageJsonPath = path.join(__dirname, '../package.json');
+                const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+                let projectName = packageJson.name || 'default-name';
+
+                // Sanitize project name for filenames
                 projectName = projectName.replace(/[^a-zA-Z0-9-_]/g, '_');
 
                 // Default output path if not specified
@@ -43,10 +39,11 @@ async function main() {
                 console.log(`📂 Directory: ${projectDir}`);
                 console.log(`📝 Output will be saved to: ${options.output}`);
 
+                // Perform analysis
                 const result = await analyze(projectDir, {
                     output: options.output,
-                    excludePatterns: options.exclude,
-                    includePatterns: options.include
+                    exclude: options.exclude,
+                    include: options.include,
                 });
 
                 console.log('\n✅ Analysis completed successfully!');

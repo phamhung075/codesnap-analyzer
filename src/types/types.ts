@@ -1,7 +1,7 @@
 export interface AnalyzeOptions {
     maxFileSize?: number;
-    includePatterns?: string[];
-    excludePatterns?: string[];
+    include?: string[];
+    exclude?: string[];
     output?: string | null;
 }
 
