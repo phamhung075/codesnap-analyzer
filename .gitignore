@@ -3,6 +3,7 @@ node_modules/
 package-lock.json
 yarn.lock
 .npm/
+pnpm-lock.yaml
 
 # Build outputs
 dist/
@@ -65,3 +66,4 @@ debug.test.log
 # Output directories
 output/
 codesnap/
+
