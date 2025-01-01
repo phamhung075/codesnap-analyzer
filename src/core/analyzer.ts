@@ -73,16 +73,19 @@ export class DirectoryAnalyzer {
     private shouldSkipDirectory(dirPath: string): boolean {
         const relativePath = path.relative(this.directory, dirPath).replace(/\\/g, '/');
         return this.ignorePatterns.some(pattern => {
-            pattern = pattern.replace(/\/$/, '');
+            // Remove leading and trailing slashes
+            const normalizedPattern = pattern.replace(/^\/+|\/+$/g, '');
+            const normalizedPath = relativePath.replace(/^\/+|\/+$/g, '');
 
             // For directory patterns without wildcards
-            if (!pattern.includes('*')) {
-                return relativePath === pattern || relativePath.startsWith(`${pattern}/`);
+            if (!normalizedPattern.includes('*')) {
+                return normalizedPath === normalizedPattern ||
+                    normalizedPath.startsWith(normalizedPattern + '/');
             }
 
             // For patterns with wildcards
-            const matcher = new Minimatch(pattern, { dot: true });
-            return matcher.match(relativePath);
+            const matcher = new Minimatch(normalizedPattern, { dot: true });
+            return matcher.match(normalizedPath);
         });
     }
 

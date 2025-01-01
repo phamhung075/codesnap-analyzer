@@ -41,11 +41,14 @@ export class TokenCounter {
 
   // Count tokens for all models
   static async countTokens(text: string): Promise<TokenCount> {
+    // Remove unwanted tokens
+    const sanitizedText = text.replace(/<\|endoftext\|>/g, '');
+
     const [gpt35, gpt4, claude, llama2] = await Promise.all([
-      this.countGPT35Tokens(text),
-      this.countGPT4Tokens(text),
-      this.countClaudeTokens(text),
-      this.countLlama2Tokens(text)
+      this.countGPT35Tokens(sanitizedText),
+      this.countGPT4Tokens(sanitizedText),
+      this.countClaudeTokens(sanitizedText),
+      this.countLlama2Tokens(sanitizedText)
     ]);
 
     return {
