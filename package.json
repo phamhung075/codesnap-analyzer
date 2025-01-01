@@ -1,6 +1,6 @@
 {
   "name": "codesnap-analyzer",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Create comprehensive snapshots of your codebase with token counting for LLMs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,7 +26,7 @@
     "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "jest --config jestconfig.json",
     "bump": "pnpm version patch --no-git-tag-version",
-    "release": "pnpm bump && pnpm publish --access public"
+    "release": "pnpm publish --access public"
   },
   "repository": {
     "type": "git",
