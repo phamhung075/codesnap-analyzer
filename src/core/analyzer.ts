@@ -167,7 +167,7 @@ export class DirectoryAnalyzer {
                     continue;
                 }
             } else {
-                let skipReason = [];
+                const skipReason = [];
                 if (!isText) skipReason.push('binary file');
                 if (fileSize > maxFileSize) skipReason.push('file too large');
                 console.log(`   ⏭️  Skipping content for: ${relativePath} (${skipReason.join(', ')})`);
