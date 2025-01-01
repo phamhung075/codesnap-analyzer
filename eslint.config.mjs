@@ -1,4 +1,3 @@
-// eslint.config.mjs
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
@@ -11,6 +10,15 @@ export default [
   pluginJs.configs.recommended,
   {
     files: ["**/*.ts"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: './tsconfig.json',  // Path to your tsconfig.json
+        tsconfigRootDir: '.',
+        ecmaVersion: 2022,
+        sourceType: 'module',
+      },
+    },
     rules: {
       // Strict type checking
       "@typescript-eslint/explicit-function-return-type": "error",
@@ -20,8 +28,6 @@ export default [
       "@typescript-eslint/no-unsafe-assignment": "error",
       "@typescript-eslint/no-unsafe-member-access": "error",
       "@typescript-eslint/no-unsafe-return": "error",
-      
-      // Changed this line to remove the options
       "@typescript-eslint/no-unsafe-argument": "error",
       
       // Other recommended rules
@@ -30,7 +36,10 @@ export default [
         argsIgnorePattern: "^_",
         varsIgnorePattern: "^_"
       }]
-    }
+    },
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
   },
   ...tseslint.configs.recommended
 ];
