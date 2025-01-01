@@ -2,7 +2,7 @@
 import { get_encoding, encoding_for_model } from '@dqbd/tiktoken';
 import type { TiktokenModel } from '@dqbd/tiktoken';
 import { TokenCount } from '../types/types';
-
+import { PRICING } from '../constants/pricing';
 
 export class TokenCounter {
   // Initialize tiktoken encoders
@@ -10,8 +10,8 @@ export class TokenCounter {
     try {
       return encoding_for_model(model);
     } catch (error) {
-      console.error(`Error checking if file is text: ${error}`);
-      return get_encoding('cl100k_base');  // fallback to base encoding
+      console.error(`Error initializing tokenizer: ${error}`);
+      return get_encoding('cl100k_base'); // fallback to base encoding
     }
   }
 
@@ -56,14 +56,25 @@ export class TokenCounter {
     };
   }
 
-  // Format token counts in a readable way
+  // Calculate token cost
+  static calculateTokenCost(counts: TokenCount): Record<string, string> {
+    return {
+      gpt35: `$${((counts.gpt35 / 1000) * PRICING.gpt35).toFixed(4)}`,
+      gpt4: `$${((counts.gpt4 / 1000) * PRICING.gpt4).toFixed(4)}`,
+      claude: `$${((counts.claude / 1000) * PRICING.claude).toFixed(4)}`,
+      llama2: `$${((counts.llama2 / 1000) * PRICING.llama2).toFixed(4)}`
+    };
+  }
+
+  // Format token counts and costs in a readable way
   static formatTokenCounts(counts: TokenCount): string {
+    const costs = this.calculateTokenCost(counts);
     return [
-      'Token counts by model:',
-      `   GPT-3.5: ${this.formatNumber(counts.gpt35)}`,
-      `   GPT-4:   ${this.formatNumber(counts.gpt4)}`,
-      `   Claude:  ${this.formatNumber(counts.claude)}`,
-      `   LLaMA 2: ${this.formatNumber(counts.llama2)}`
+      'Token counts and costs by model:',
+      `   GPT-3.5: ${this.formatNumber(counts.gpt35)} tokens → ${costs.gpt35}`,
+      `   GPT-4:   ${this.formatNumber(counts.gpt4)} tokens → ${costs.gpt4}`,
+      `   Claude:  ${this.formatNumber(counts.claude)} tokens → ${costs.claude}`,
+      `   LLaMA 2: ${this.formatNumber(counts.llama2)} tokens → ${costs.llama2}`
     ].join('\n');
   }
 
