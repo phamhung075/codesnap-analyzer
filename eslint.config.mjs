@@ -21,10 +21,8 @@ export default [
       "@typescript-eslint/no-unsafe-member-access": "error",
       "@typescript-eslint/no-unsafe-return": "error",
       
-      // Allow unknown type as a safer alternative to any
-      "@typescript-eslint/no-unsafe-argument": ["error", {
-        allowUnknown: true
-      }],
+      // Changed this line to remove the options
+      "@typescript-eslint/no-unsafe-argument": "error",
       
       // Other recommended rules
       "@typescript-eslint/explicit-module-boundary-types": "error",
