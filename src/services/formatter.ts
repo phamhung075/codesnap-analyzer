@@ -2,6 +2,7 @@
 import path from "path";
 import { FileInfo, DirectoryStats, TokenCount } from "../types/types";
 import { TokenCounter } from "../utils/token-counter";
+import { console } from "inspector";
 
 interface TreeNode {
   name: string;
@@ -129,6 +130,7 @@ export class OutputFormatter {
   }
 
   static createContent(files: FileInfo[]): string {
+    
     const output: string[] = [];
     const separator = "=" + "=".repeat(47) + "\n";
 
@@ -146,6 +148,8 @@ export class OutputFormatter {
 
     // Add all other files
     files.forEach((file) => {
+      console.log('createContent from', file.path);
+
       if (file.content && file.path.toLowerCase() !== "readme.md") {
         output.push(
           separator + `File: ${file.path}\n` + separator + file.content + "\n",
