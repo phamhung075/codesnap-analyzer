@@ -1,17 +1,21 @@
 // src/services/formatter.ts
-import path from 'path';
-import { FileInfo, DirectoryStats, TokenCount } from '../types/types';
-import { TokenCounter } from '../utils/token-counter';
+import path from "path";
+import { FileInfo, DirectoryStats, TokenCount } from "../types/types";
+import { TokenCounter } from "../utils/token-counter";
 
 interface TreeNode {
   name: string;
-  type: 'file' | 'directory';
+  type: "file" | "directory";
   children: TreeNode[];
   path: string;
 }
 
 export class OutputFormatter {
-  static createSummary(directory: string, stats: DirectoryStats, tokenCounts: TokenCount): string {
+  static createSummary(
+    directory: string,
+    stats: DirectoryStats,
+    tokenCounts: TokenCount,
+  ): string {
     const summary = TokenCounter.formatTokenCounts(tokenCounts);
 
     const lines = [
@@ -19,11 +23,11 @@ export class OutputFormatter {
       `Total Files Analyzed: ${stats.totalFiles}`,
       `Total Size: ${(stats.totalSize / 1024 / 1024).toFixed(2)} MB`,
       `Date: ${new Date().toISOString()}`,
-      '',
-      summary
+      "",
+      summary,
     ];
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   private static formatNumber(num: number): string {
@@ -38,16 +42,16 @@ export class OutputFormatter {
 
   static createTree(files: FileInfo[]): string {
     const tree = this.buildFileTree(files);
-    const lines = ['Directory structure:', ...this.renderTree(tree)];
-    return lines.join('\n');
+    const lines = ["Directory structure:", ...this.renderTree(tree)];
+    return lines.join("\n");
   }
 
   private static buildFileTree(files: FileInfo[]): TreeNode {
     const root: TreeNode = {
-      name: '',
-      type: 'directory',
+      name: "",
+      type: "directory",
       children: [],
-      path: ''
+      path: "",
     };
 
     // Sort files to ensure consistent ordering
@@ -61,25 +65,25 @@ export class OutputFormatter {
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
         const isFile = i === parts.length - 1;
-        const nodePath = parts.slice(0, i + 1).join('/');
+        const nodePath = parts.slice(0, i + 1).join("/");
 
         // Find existing node or create new one
-        let node = currentNode.children.find(n => n.name === part);
-        
+        let node = currentNode.children.find((n) => n.name === part);
+
         if (!node) {
           node = {
             name: part,
-            type: isFile ? 'file' : 'directory',
+            type: isFile ? "file" : "directory",
             children: [],
-            path: nodePath
+            path: nodePath,
           };
           currentNode.children.push(node);
-          
+
           // Sort children after adding new node
           currentNode.children.sort((a, b) => {
             // Directories come first
             if (a.type !== b.type) {
-              return a.type === 'directory' ? -1 : 1;
+              return a.type === "directory" ? -1 : 1;
             }
             // Then sort alphabetically
             return a.name.localeCompare(b.name);
@@ -93,20 +97,31 @@ export class OutputFormatter {
     return root;
   }
 
-  private static renderTree(node: TreeNode, prefix: string = '', isLast: boolean = true, level: number = 0): string[] {
+  private static renderTree(
+    node: TreeNode,
+    prefix: string = "",
+    isLast: boolean = true,
+    level: number = 0,
+  ): string[] {
     const lines: string[] = [];
 
     if (node.name) {
-      const line = prefix + (isLast ? '└── ' : '├── ') + node.name + (node.type === 'directory' ? '/' : '');
+      const line =
+        prefix +
+        (isLast ? "└── " : "├── ") +
+        node.name +
+        (node.type === "directory" ? "/" : "");
       lines.push(line);
     }
 
-    const childPrefix = node.name ? prefix + (isLast ? '    ' : '│   ') : '';
+    const childPrefix = node.name ? prefix + (isLast ? "    " : "│   ") : "";
 
-    if (node.type === 'directory') {
+    if (node.type === "directory") {
       node.children.forEach((child, index) => {
         const isLastChild = index === node.children.length - 1;
-        lines.push(...this.renderTree(child, childPrefix, isLastChild, level + 1));
+        lines.push(
+          ...this.renderTree(child, childPrefix, isLastChild, level + 1),
+        );
       });
     }
 
@@ -115,21 +130,29 @@ export class OutputFormatter {
 
   static createContent(files: FileInfo[]): string {
     const output: string[] = [];
-    const separator = '=' + '='.repeat(47) + '\n';
+    const separator = "=" + "=".repeat(47) + "\n";
 
     // Add README.md first if it exists
-    const readme = files.find(f => f.path.toLowerCase() === 'readme.md');
+    const readme = files.find((f) => f.path.toLowerCase() === "readme.md");
     if (readme?.content) {
-      output.push(separator + `File: ${readme.path}\n` + separator + readme.content + '\n');
+      output.push(
+        separator +
+          `File: ${readme.path}\n` +
+          separator +
+          readme.content +
+          "\n",
+      );
     }
 
     // Add all other files
-    files.forEach(file => {
-      if (file.content && file.path.toLowerCase() !== 'readme.md') {
-        output.push(separator + `File: ${file.path}\n` + separator + file.content + '\n');
+    files.forEach((file) => {
+      if (file.content && file.path.toLowerCase() !== "readme.md") {
+        output.push(
+          separator + `File: ${file.path}\n` + separator + file.content + "\n",
+        );
       }
     });
 
-    return output.join('\n');
+    return output.join("\n");
   }
 }
