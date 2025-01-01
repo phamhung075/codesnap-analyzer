@@ -19,13 +19,21 @@ async function main() {
                 // Resolve project directory
                 const projectDir = path.resolve(directory);
 
-                // Get project name from package.json or fallback to directory name
-                const packageJsonPath = path.join(__dirname, '../package.json');
-                const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-                let projectName = packageJson.name || 'default-name';
+                let projectName = path.basename(projectDir);
+                try {
+                    const packageJsonPath = path.join(projectDir, 'package.json');
+                    if (fs.existsSync(packageJsonPath)) {
+                        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+                        projectName = packageJson.name || projectName;
+                    }
+                } catch {
+                    // Fallback to folder name if package.json doesn't exist
+                    projectName = path.basename(projectDir);
+                }
 
                 // Sanitize project name for filenames
                 projectName = projectName.replace(/[^a-zA-Z0-9-_]/g, '_');
+
 
                 // Default output path if not specified
                 if (!options.output) {
