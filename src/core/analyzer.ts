@@ -112,41 +112,73 @@ export class DirectoryAnalyzer {
   private shouldIgnore(filePath: string): boolean {
     const relativePath = path.relative(this.baseDirectory, filePath).replace(/\\/g, '/');
 
+    // Always ignore .venv and venv directories
+    if (relativePath.startsWith('.venv/') || relativePath.startsWith('venv/') ||
+      relativePath === '.venv' || relativePath === 'venv') {
+      return true;
+    }
+
     return Array.from(this.ignorePatterns).some(pattern => {
-      // Handle directory-only patterns (ending with /)
-      if (pattern.endsWith('/')) {
-        return new Minimatch(pattern.slice(0, -1), { dot: true }).match(relativePath);
+      // Convert the pattern to a proper minimatch pattern
+      let minimatchPattern = pattern;
+
+      // Handle patterns that should match directories and their contents
+      if (pattern.endsWith('/**')) {
+        return relativePath.startsWith(pattern.slice(0, -3));
       }
 
-      // Handle file patterns
-      return new Minimatch(pattern, { dot: true }).match(relativePath);
+      // Handle directory-only patterns (ending with /)
+      if (pattern.endsWith('/')) {
+        minimatchPattern = pattern.slice(0, -1);
+        return new Minimatch(minimatchPattern, {
+          dot: true,
+          matchBase: true
+        }).match(relativePath);
+      }
+
+      // Handle standard file patterns
+      return new Minimatch(pattern, {
+        dot: true,
+        matchBase: true
+      }).match(relativePath);
     });
   }
 
   private async getAllFiles(dir: string): Promise<string[]> {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    const files: string[] = [];
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      const files: string[] = [];
 
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      const relativePath = path.relative(this.baseDirectory, fullPath).replace(/\\/g, '/');
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        const relativePath = path.relative(this.baseDirectory, fullPath).replace(/\\/g, '/');
 
-      if (entry.isDirectory()) {
-        if (this.shouldIgnore(fullPath)) {
-          console.log(`   ⏭️  Skipping directory: ${relativePath} (matches ignore pattern)`);
+        // Early check for virtual environment directories
+        if (entry.isDirectory() && (entry.name === '.venv' || entry.name === 'venv')) {
+          console.log(`   ⏭️  Skipping virtual environment directory: ${relativePath}`);
           continue;
         }
-        files.push(...(await this.getAllFiles(fullPath)));
-      } else {
-        if (this.shouldIgnore(fullPath)) {
-          console.log(`   ⏭️  Skipping file: ${relativePath} (matches ignore pattern)`);
-          continue;
+
+        if (entry.isDirectory()) {
+          if (this.shouldIgnore(fullPath)) {
+            console.log(`   ⏭️  Skipping directory: ${relativePath} (matches ignore pattern)`);
+            continue;
+          }
+          files.push(...(await this.getAllFiles(fullPath)));
+        } else {
+          if (this.shouldIgnore(fullPath)) {
+            console.log(`   ⏭️  Skipping file: ${relativePath} (matches ignore pattern)`);
+            continue;
+          }
+          files.push(fullPath);
         }
-        files.push(fullPath);
       }
-    }
 
-    return files.sort();
+      return files.sort();
+    } catch (error) {
+      console.error(`Error reading directory ${dir}:`, error);
+      return [];
+    }
   }
 
   async analyze(): Promise<{ files: FileInfo[], stats: DirectoryStats, tokenCounts: TokenCount }> {
