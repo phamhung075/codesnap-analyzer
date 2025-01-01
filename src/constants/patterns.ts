@@ -1,21 +1,21 @@
 // src/constants/patterns.ts
-export const DEFAULT_IGNORE_PATTERNS = [
+export const DEFAULT_IGNORE_PATTERNS: ReadonlyArray<string> = [
   // Node
   "node_modules",
   "package-lock.json",
   "yarn.lock",
   ".npm",
-  
+
   // Version Control
   ".git",
   ".svn",
   ".hg",
-  
+
   // Build
   "dist",
   "build",
   "out",
-  
+
   // Python
   ".venv/**",
   "venv/**",
@@ -35,21 +35,21 @@ export const DEFAULT_IGNORE_PATTERNS = [
   "*.cover",
   "*.log",
   ".pytest_cache",
-  
+
   // IDE
   ".idea",
   ".vscode",
   "*.swp",
   "*.swo",
-  
+
   // Temp
   ".tmp",
   "tmp",
-  
+
   // OS
   ".DS_Store",
   "Thumbs.db",
-  
+
   // Common binary files
   "*.jpg",
   "*.jpeg",
@@ -61,7 +61,7 @@ export const DEFAULT_IGNORE_PATTERNS = [
   "*.dll",
   "*.so",
   "*.dylib",
-  
+
   // Project specific
-  "codesnap"
+  "codesnap",
 ] as const;

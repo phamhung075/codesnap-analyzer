@@ -30,3 +30,11 @@ export interface TokenCount {
   claude: number;
   llama2: number;
 }
+
+export interface PackageJson {
+  name: string;
+  version: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  [key: string]: unknown; // For other possible fields
+}

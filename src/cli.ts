@@ -4,7 +4,7 @@ import { Command } from "commander";
 import { analyze, AnalyzeOptions } from "./index";
 import path from "path";
 import fs from "fs-extra";
-async function main() {
+async function main(): Promise<void> {
   const program = new Command();
 
   program
