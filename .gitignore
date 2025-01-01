@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+.npm/
+
+# Build outputs
+dist/
+build/
+lib/
+*.tsbuildinfo
+
+# Testing
+coverage/
+.nyc_output/
+jest-report/
+test-report/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Temporary files
+.temp/
+.tmp/
+.cache/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Docs
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Debug logs
+debug.log
+debug.test.log
+
+# Output directories
+output/
+codesnap/
