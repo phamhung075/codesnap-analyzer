@@ -14,19 +14,19 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build": "npm run clean && tsc",
+    "build": "pnpm run clean && tsc",
     "start": "node dist/cli.js",
     "dev": "ts-node src/cli.ts",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "npm run format && git add -A src",
+    "prepare": "pnpm run build",
+    "prepublishOnly": "pnpm test && pnpm run lint",
+    "preversion": "pnpm run lint",
+    "version": "pnpm run format && git add -A src",
     "postversion": "git push && git push --tags",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "jest --config jestconfig.json",
-    "bump": "npm version patch --no-git-tag-version",
-    "release": "npm run bump && npm publish"
+    "bump": "pnpm version patch --no-git-tag-version",
+    "release": "pnpm run bump && pnpm publish"
   },
   "repository": {
     "type": "git",
