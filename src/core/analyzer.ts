@@ -198,12 +198,7 @@ export class DirectoryAnalyzer {
             .filter((content): content is string => content !== null)
             .join('\n');
 
-        const tokenCounts = await TokenCounter.countTokens(allContent);
-
-        console.log('\n📊 Analysis complete!');
-        console.log(`   Total files processed: ${stats.totalFiles}`);
-        console.log(`   Total size: ${(stats.totalSize / 1024 / 1024).toFixed(2)} MB`);
-        console.log('\n' + TokenCounter.formatTokenCounts(tokenCounts));
+        const tokenCounts = await TokenCounter.countTokens(allContent);        
 
         return { files: files.sort((a, b) => a.path.localeCompare(b.path)), stats, tokenCounts };
     }

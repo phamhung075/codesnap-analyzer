@@ -145,40 +145,18 @@ PS D:\DaiHung\__labo\codesnap> codesnap .
    ✅ Reading: src/utils/token-counter.ts
    ✅ Reading: tsconfig.json
 
-
-📊 Analysis complete!
-   Total files processed: 18
-   Total size: 0.15 MB
-   Total files processed: 18
-   Total size: 0.15 MB
-
-Token counts by model:
-   GPT-3.5: 68.6K
-   GPT-3.5: 68.6K
-   GPT-4:   68.6K
-   Claude:  68.6K
-   LLaMA 2: 75.5K
-   LLaMA 2: 75.5K
-
 ✅ Analysis completed successfully!
 📊 Summary:
-Project Directory: codesnap
-✅ Analysis completed successfully!
-📊 Summary:
-Project Directory: codesnap
-📊 Summary:
-Project Directory: codesnap
-Project Directory: codesnap
-Total Files Analyzed: 18
-Total Size: 0.15 MB
-Total Size: 0.15 MB
-Date: 2025-01-01T11:33:08.158Z
+Project Directory: AIanalist
+Total Files Analyzed: 107
+Total Size: 0.33 MB
+Date: 2025-01-01T17:49:26.916Z
 
-Token counts by model:
-   GPT-3.5: 68.6K
-   GPT-4:   68.6K
-   Claude:  68.6K
-   LLaMA 2: 75.5K
+Token counts and costs by model:
+   GPT-3.5: 70.7K tokens → $0.1060
+   GPT-4:   70.7K tokens → $2.1200
+   Claude:  70.7K tokens → $1.0600
+   LLaMA 2: 77.7K tokens → $0.1555
 ```
 
 ### Example Output File

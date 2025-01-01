@@ -1,6 +1,7 @@
 // src/services/formatter.ts
 import path from 'path';
 import { FileInfo, DirectoryStats, TokenCount } from '../types/types';
+import { TokenCounter } from '../utils/token-counter';
 
 interface TreeNode {
   name: string;
@@ -11,17 +12,15 @@ interface TreeNode {
 
 export class OutputFormatter {
   static createSummary(directory: string, stats: DirectoryStats, tokenCounts: TokenCount): string {
+    const summary = TokenCounter.formatTokenCounts(tokenCounts);
+
     const lines = [
       `Project Directory: ${path.basename(directory)}`,
       `Total Files Analyzed: ${stats.totalFiles}`,
       `Total Size: ${(stats.totalSize / 1024 / 1024).toFixed(2)} MB`,
       `Date: ${new Date().toISOString()}`,
       '',
-      'Token counts by model:',
-      `   GPT-3.5: ${this.formatNumber(tokenCounts.gpt35)}`,
-      `   GPT-4:   ${this.formatNumber(tokenCounts.gpt4)}`,
-      `   Claude:  ${this.formatNumber(tokenCounts.claude)}`,
-      `   LLaMA 2: ${this.formatNumber(tokenCounts.llama2)}`
+      summary
     ];
 
     return lines.join('\n');
