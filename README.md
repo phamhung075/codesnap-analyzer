@@ -1,5 +1,6 @@
 # CodeSnap Analyzer Node.js
 https://github.com/phamhung075/codesnap-analyzer
+
 A tool for creating comprehensive snapshots of your codebase with token counting for LLMs.
 
 ## Installation
