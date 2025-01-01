@@ -1,5 +1,5 @@
 // README.md
-# CodeSnap Analyzer
+# CodeSnap Analyzer Node.js
 
 A tool for creating comprehensive snapshots of your codebase with token counting for LLMs.
 
