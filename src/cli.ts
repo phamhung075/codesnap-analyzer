@@ -4,7 +4,12 @@ import { Command } from "commander";
 import { analyze, AnalyzeOptions } from "./index";
 import path from "path";
 import fs from "fs-extra";
-import { Component, ComponentRelation, LayeredAnalysis, LayerOptions } from "./types/layer-types";
+import {
+  Component,
+  ComponentRelation,
+  LayeredAnalysis,
+  LayerOptions,
+} from "./types/layer-types";
 import { LayeredAnalyzer } from "./services/layered-analyzer";
 
 async function handleSnapshot(directory: string, options: AnalyzeOptions) {
@@ -57,32 +62,61 @@ async function main(): Promise<void> {
 
   program
     .name("codesnap")
-    .description("Create comprehensive snapshots of your codebase")
-    .version("1.0.0");
-
-  // Default command (backward compatibility)
-  program
+    .description("Create a comprehensive snapshot of your codebase")
     .argument("[directory]", "Directory to analyze", ".")
     .option("-o, --output <path>", "Output file path")
     .option("-e, --exclude <patterns...>", "Additional patterns to exclude")
     .option("-i, --include <patterns...>", "Patterns to include")
-    .action((directory: string, options: AnalyzeOptions) => {
-      handleSnapshot(directory, options);
+    .action(async (directory: string, options: AnalyzeOptions) => {
+      try {
+        // Resolve project directory
+        const projectDir = path.resolve(directory);
+
+        let projectName = path.basename(projectDir);
+        try {
+          const packageJsonPath = path.join(projectDir, "package.json");
+          if (fs.existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(
+              fs.readFileSync(packageJsonPath, "utf-8")
+            );
+            projectName = packageJson.name || projectName;
+          }
+        } catch {
+          // Fallback to folder name if package.json doesn't exist
+          projectName = path.basename(projectDir);
+        }
+
+        // Sanitize project name for filenames
+        projectName = projectName.replace(/[^a-zA-Z0-9-_]/g, "_");
+
+        // Default output path if not specified
+        if (!options.output) {
+          const outputDir = path.join(projectDir, "codesnap");
+          await fs.ensureDir(outputDir);
+          options.output = path.join(outputDir, `${projectName}.txt`);
+        }
+
+        console.log("📸 Starting CodeSnap analysis...");
+        console.log(`📁 Project: ${projectName}`);
+        console.log(`📂 Directory: ${projectDir}`);
+        console.log(`📝 Output will be saved to: ${options.output}`);
+
+        // Perform analysis
+        const result = await analyze(projectDir, {
+          output: options.output,
+          exclude: options.exclude,
+          include: options.include,
+        });
+
+        console.log("\n✅ Analysis completed successfully!");
+        console.log("📊 Summary:");
+        console.log(result.summary);
+      } catch (error) {
+        console.error(`\n❌ Error: ${(error as Error).message}`);
+        process.exit(1);
+      }
     });
 
-  // Explicit snapshot command
-  program
-    .command("snapshot")
-    .description("Create a snapshot of your codebase with token counting")
-    .argument("[directory]", "Directory to analyze", ".")
-    .option("-o, --output <path>", "Output file path")
-    .option("-e, --exclude <patterns...>", "Additional patterns to exclude")
-    .option("-i, --include <patterns...>", "Patterns to include")
-    .action((directory: string, options: AnalyzeOptions) => {
-      handleSnapshot(directory, options);
-    });
-
-  
   program
     .name("layer")
     .description("Create a comprehensive snapshot of your codebase")
