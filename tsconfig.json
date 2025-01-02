@@ -11,6 +11,6 @@
     "skipLibCheck": true,
     "types": ["node", "jest"]
   },
-  "include": ["src", "src/**/*.test.ts"],  // Added test files
+  "include": ["src"],  // Added test files
   "exclude": ["node_modules", "dist"]  // Removed test files from exclude
 }

@@ -16,10 +16,10 @@ import { TokenCounter } from "../utils/token-counter";
 import { OutputFormatter } from "../services/formatter";
 
 export class DirectoryAnalyzer {
-  private readonly directory: string;
-  private readonly options: AnalyzeOptions;
-  private readonly ignorePatterns: Set<string>;
-  private readonly baseDirectory: string;
+  readonly directory: string;
+  readonly options: AnalyzeOptions;
+  readonly ignorePatterns: Set<string>;
+  readonly baseDirectory: string;
 
   constructor(directory: string, options: AnalyzeOptions = {}) {
     this.directory = path.resolve(directory);

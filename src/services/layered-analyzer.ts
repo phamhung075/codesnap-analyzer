@@ -24,7 +24,7 @@ import { FileInfo } from "../types/types";
 import { console } from "inspector";
 
 export class LayeredAnalyzer {
-  private readonly baseAnalyzer: DirectoryAnalyzer;
+  readonly baseAnalyzer: DirectoryAnalyzer;
   private readonly options: LayerOptions;
   private cache: Map<string, LayeredAnalysis>;
 
@@ -35,10 +35,11 @@ export class LayeredAnalyzer {
   }
 
   private generateCacheKey(): string {
-    return `${this.options.depth}-${this.options.focusPath || "all"}-${Date.now()}`;
+    return `${this.options.depth}-${this.options.focusPath || "all"}-${this.baseAnalyzer.directory}`;
   }
 
   async analyze(): Promise<LayeredAnalysis> {
+    console.log("LayeredAnalysis...");
     const cacheKey = this.generateCacheKey();
     const cachedResult = await this.cache.get(cacheKey);
 
@@ -51,12 +52,15 @@ export class LayeredAnalyzer {
     let result: LayeredAnalysis;
     switch (this.options.depth) {
       case "top":
+        console.log("Analyzing top layer");
         result = await this.analyzeTopLayer(files);
         break;
       case "middle":
+        console.log("Analyzing middle layer");
         result = await this.analyzeMiddleLayer(files);
         break;
       case "detail":
+        console.log("Analyzing detail layer");
         result = await this.analyzeDetailLayer(files, this.options.focusPath);
         break;
       default:
@@ -70,25 +74,24 @@ export class LayeredAnalyzer {
   private async analyzeHighLevelRelations(
     components: Component[]
   ): Promise<ComponentRelation[]> {
-    const relations: ComponentRelation[] = [];
+    const relationPromises = components.map(async (source) => {
+      const targetRelations = components
+        .filter(
+          (target) =>
+            source.path !== target.path &&
+            source.dependencies.includes(target.path)
+        )
+        .map(async (target) => ({
+          source: source.path,
+          target: target.path,
+          type: "imports",
+          weight: await this.calculateRelationWeight(source, target),
+        }));
+      return Promise.all(targetRelations);
+    });
 
-    for (const source of components) {
-      for (const target of components) {
-        if (source.path === target.path) continue;
-
-        // Check for dependencies
-        if (source.dependencies.includes(target.path)) {
-          relations.push({
-            source: source.path,
-            target: target.path,
-            type: "imports",
-            weight: await this.calculateRelationWeight(source, target),
-          });
-        }
-      }
-    }
-
-    return relations;
+    const resolvedRelations = await Promise.all(relationPromises);
+    return resolvedRelations.flat().filter(Boolean) as ComponentRelation[];
   }
 
   private async calculateRelationWeight(
@@ -151,12 +154,34 @@ export class LayeredAnalyzer {
   }
 
   private async analyzeTopLayer(files: FileInfo[]): Promise<LayeredAnalysis> {
+    // High-level module analysis
     const components = await this.identifyMajorComponents(files);
+    // Basic relations without detailed API analysis
     const relations = await this.analyzeHighLevelRelations(components);
     const metrics = await this.calculateMetrics(components, relations);
 
     return {
       layer: "top",
+      components,
+      relations,
+      metrics,
+      timestamp: Date.now(),
+      version: "1.0.0",
+    };
+  }
+
+  private async analyzeMiddleLayer(
+    files: FileInfo[]
+  ): Promise<LayeredAnalysis> {
+    // More detailed component analysis with module boundaries
+    const components = await this.identifyModuleBoundaries(files);
+    // Enhanced relations with API usage analysis
+    const relations = await this.analyzeModuleInterconnections(components);
+    // More detailed metrics including API-level metrics
+    const metrics = await this.calculateDetailedMetrics(components, relations);
+
+    return {
+      layer: "middle",
       components,
       relations,
       metrics,
@@ -360,9 +385,13 @@ export class LayeredAnalyzer {
 
   private calculateCyclomaticComplexity(ast: TSESTree.Node): number {
     let complexity = 1; // Base complexity
+    const visited = new WeakSet();
 
     SimpleTraverser(ast, {
       enter(node: TSESTree.Node) {
+        if (visited.has(node)) return;
+        visited.add(node);
+
         switch (node.type) {
           case AST_NODE_TYPES.IfStatement:
           case AST_NODE_TYPES.WhileStatement:
@@ -373,40 +402,12 @@ export class LayeredAnalyzer {
           case AST_NODE_TYPES.ConditionalExpression:
             complexity++;
             break;
-          case AST_NODE_TYPES.SwitchCase:
-            if ((node as TSESTree.SwitchCase).test) complexity++;
-            break;
-          case AST_NODE_TYPES.LogicalExpression:
-            if (
-              (node as TSESTree.LogicalExpression).operator === "&&" ||
-              (node as TSESTree.LogicalExpression).operator === "||"
-            ) {
-              complexity++;
-            }
-            break;
         }
       },
     });
 
     return complexity;
-  }
-
-  private async analyzeMiddleLayer(
-    files: FileInfo[]
-  ): Promise<LayeredAnalysis> {
-    const components = await this.identifyModuleBoundaries(files);
-    const relations = await this.analyzeModuleInterconnections(components);
-    const metrics = await this.calculateMetrics(components, relations);
-
-    return {
-      layer: "middle",
-      components,
-      relations,
-      metrics,
-      timestamp: Date.now(),
-      version: "1.0.0",
-    };
-  }
+  }  
 
   private async identifyModuleBoundaries(
     files: FileInfo[]
@@ -436,7 +437,8 @@ export class LayeredAnalyzer {
     for (const relation of relations) {
       const source = components.find((c) => c.path === relation.source);
       const target = components.find((c) => c.path === relation.target);
-
+      console.log(relation);
+      console.log(source, target);
       if (source?.apis && target?.apis) {
         relation.description = this.analyzeAPIUsage(source.apis, target.apis);
       }
@@ -505,11 +507,35 @@ export class LayeredAnalyzer {
     files: FileInfo[],
     focusPath?: string
   ): Promise<LayeredAnalysis> {
+    // Filter files based on focusPath if provided
     const targetFiles = focusPath
       ? files.filter((f) => f.path.startsWith(focusPath))
       : files;
 
-    const components = await this.performDetailedAnalysis(targetFiles);
+    // Add guards against empty file sets
+    if (!targetFiles.length) {
+      return {
+        layer: "detail",
+        components: [],
+        relations: [],
+        metrics: {
+          totalComponents: 0,
+          averageComplexity: 0,
+          dependencyDepth: 0,
+          cohesion: 0,
+          coupling: 0,
+        },
+        timestamp: Date.now(),
+        version: "1.0.0",
+      };
+    }
+
+    // Process components with proper error handling
+    const components = (
+      await Promise.all(targetFiles.map((file) => this.analyzeComponent(file)))
+    ).filter((component): component is Component => component !== null);
+
+    // Generate relations only for valid components
     const relations = await this.analyzeDetailedRelations(components);
     const metrics = await this.calculateDetailedMetrics(components, relations);
 
@@ -521,6 +547,40 @@ export class LayeredAnalyzer {
       timestamp: Date.now(),
       version: "1.0.0",
     };
+  }
+
+  // New helper method to handle individual component analysis
+  private async analyzeComponent(file: FileInfo): Promise<Component | null> {
+    if (!file.content) return null;
+
+    try {
+      const ast = parse(file.content, {
+        range: true,
+        loc: true,
+        comment: true,
+        tokens: true,
+        jsx: true,
+      });
+
+      const complexity = this.calculateCyclomaticComplexity(ast);
+      const dependencies = await this.extractModuleDependencies([file]);
+      const apis = await this.extractAPIs([file]);
+
+      return {
+        path: file.path,
+        type: "file",
+        name: path.basename(file.path),
+        description: await this.generateModuleDescription([file]),
+        complexity,
+        dependencies,
+        changeFrequency: await this.calculateChangeFrequency([file]),
+        maintainability: await this.calculateMaintainability([file]),
+        apis: apis.length > 0 ? apis : undefined,
+      };
+    } catch (error) {
+      console.warn(`Error analyzing file ${file.path}:`, error);
+      return null;
+    }
   }
 
   private async performDetailedAnalysis(
@@ -567,8 +627,12 @@ export class LayeredAnalyzer {
     components: Component[]
   ): Promise<ComponentRelation[]> {
     const relations: ComponentRelation[] = [];
+    const visited = new Set<string>();
 
     for (const source of components) {
+      if (visited.has(source.path)) continue;
+      visited.add(source.path);
+
       for (const target of components) {
         if (source.path === target.path) continue;
 

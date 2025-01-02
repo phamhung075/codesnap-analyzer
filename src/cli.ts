@@ -20,6 +20,9 @@ async function main(): Promise<void> {
     .option("-e, --exclude <patterns...>", "Additional patterns to exclude")
     .option("-i, --include <patterns...>", "Patterns to include")
     .action(async (directory: string, options: AnalyzeOptions) => {
+      console.log("codesnap run");
+      console.log('options', options);
+
       try {
         // Resolve project directory
         const projectDir = path.resolve(directory);
@@ -29,7 +32,7 @@ async function main(): Promise<void> {
           const packageJsonPath = path.join(projectDir, "package.json");
           if (fs.existsSync(packageJsonPath)) {
             const packageJson = JSON.parse(
-              fs.readFileSync(packageJsonPath, "utf-8"),
+              fs.readFileSync(packageJsonPath, "utf-8")
             );
             projectName = packageJson.name || projectName;
           }
@@ -70,18 +73,30 @@ async function main(): Promise<void> {
    */
   program
     .command("layer")
-    .description("Create a comprehensive snapshot of your codebase with layer analysis")
+    .description(
+      "Create a comprehensive snapshot of your codebase with layer analysis"
+    )
     .argument("[directory]", "Directory to analyze", ".")
     .option("-o, --output <path>", "Output file path")
     .option("-e, --exclude <patterns...>", "Additional patterns to exclude")
     .option("-i, --include <patterns...>", "Patterns to include")
-    .option("-l, --layer <depth>", "Analysis depth (top, middle, detail)", "top")
+    .option(
+      "-l, --layer <depth>",
+      "Analysis depth (top, middle, detail)",
+      "top"
+    )
     .option("-f, --focus <path>", "Path to focus detailed analysis on")
     .option("-t, --include-tests", "Include test files in analysis")
-    .option("-d, --max-depth <number>", "Maximum depth for dependency analysis", parseFloat, 3)
+    .option(
+      "-d, --max-depth <number>",
+      "Maximum depth for dependency analysis",
+      parseFloat,
+      3
+    )
     .option("--format <type>", "Output format (text, json)", "text")
     .action(async (directory: string, options: any) => {
-      try {
+      try {       
+
         const projectDir = path.resolve(directory);
 
         let projectName = path.basename(projectDir);
@@ -89,7 +104,7 @@ async function main(): Promise<void> {
           const packageJsonPath = path.join(projectDir, "package.json");
           if (fs.existsSync(packageJsonPath)) {
             const packageJson = JSON.parse(
-              fs.readFileSync(packageJsonPath, "utf-8"),
+              fs.readFileSync(packageJsonPath, "utf-8")
             );
             projectName = packageJson.name || projectName;
           }
@@ -124,6 +139,8 @@ async function main(): Promise<void> {
           include: options.include,
           output: options.output,
         };
+
+        console.log("layerOptions", layerOptions);
 
         const analyzer = new LayeredAnalyzer(projectDir, layerOptions);
         const result = await analyzer.analyze();
@@ -164,13 +181,17 @@ function formatLayeredAnalysis(analysis: any): string {
     lines.push(`    Complexity: ${component.complexity}`);
     lines.push(`    Dependencies: ${component.dependencies.length}`);
     if (component.maintainability) {
-      lines.push(`    Maintainability: ${component.maintainability.toFixed(2)}`);
+      lines.push(
+        `    Maintainability: ${component.maintainability.toFixed(2)}`
+      );
     }
   });
 
   lines.push("\nRelations:");
   analysis.relations.forEach((relation: any) => {
-    lines.push(`\n  ${relation.source} -> ${relation.target} (${relation.type})`);
+    lines.push(
+      `\n  ${relation.source} -> ${relation.target} (${relation.type})`
+    );
     if (relation.description) {
       lines.push(`    ${relation.description}`);
     }
