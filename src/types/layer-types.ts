@@ -1,5 +1,6 @@
 // src/types/layer-types.ts
-import { AnalyzeOptions } from './types';
+import { AST_NODE_TYPES, TSESTree } from "@typescript-eslint/typescript-estree";
+import { AnalyzeOptions } from "./types";
 
 // API Definition types
 export interface APIParameter {
@@ -12,7 +13,7 @@ export interface APIParameter {
 export interface APIEndpoint {
   name: string;
   path: string;
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   parameters: APIParameter[];
   returnType: string;
   description: string;
@@ -27,7 +28,7 @@ export interface APIDefinition {
 
 export interface APITypeDefinition {
   name: string;
-  type: 'interface' | 'type' | 'class' | 'enum';
+  type: "interface" | "type" | "class" | "enum";
   properties?: Record<string, string>;
   methods?: APIEndpoint[];
   description: string;
@@ -35,7 +36,7 @@ export interface APITypeDefinition {
 
 // Layer analysis types
 export interface LayerOptions extends AnalyzeOptions {
-  depth: 'top' | 'middle' | 'detail';
+  depth: "top" | "middle" | "detail";
   focusPath?: string; // For detailed analysis of specific components
   includeTests?: boolean; // Whether to include test files in analysis
   maxDepth?: number; // Maximum depth for dependency analysis
@@ -44,13 +45,13 @@ export interface LayerOptions extends AnalyzeOptions {
 export interface ComponentRelation {
   source: string;
   target: string;
-  type: 'imports' | 'extends' | 'implements' | 'uses';
+  type: "imports" | "extends" | "implements" | "uses";
   weight: number; // Strength of relationship (0-1)
   description?: string; // Optional description of the relationship
 }
 
 export interface LayeredAnalysis {
-  layer: 'top' | 'middle' | 'detail';
+  layer: "top" | "middle" | "detail";
   components: Component[];
   relations: ComponentRelation[];
   metrics: ComponentMetrics;
@@ -60,7 +61,7 @@ export interface LayeredAnalysis {
 
 export interface Component {
   path: string;
-  type: 'file' | 'directory' | 'module';
+  type: "file" | "directory" | "module";
   name: string;
   description: string;
   complexity: number; // Cyclomatic complexity or similar metric
@@ -85,7 +86,7 @@ export interface ComponentMetrics {
     score: number; // 0-100
     issues: Array<{
       type: string;
-      severity: 'low' | 'medium' | 'high';
+      severity: "low" | "medium" | "high";
       description: string;
     }>;
   };
@@ -109,7 +110,7 @@ export interface AnalysisResult extends LayeredAnalysis {
   cacheInfo?: {
     hit: boolean;
     age: number;
-    source: 'memory' | 'disk' | 'fresh';
+    source: "memory" | "disk" | "fresh";
   };
   performance: {
     duration: number;
@@ -118,15 +119,31 @@ export interface AnalysisResult extends LayeredAnalysis {
   };
 }
 
+// Define types for AST traversal
+// Define types for AST traversal
+export type ASTNode = TSESTree.Node & {
+  type: AST_NODE_TYPES;
+};
+
+export type ClassNode = ASTNode & {
+  type: AST_NODE_TYPES.ClassDeclaration;
+  id: TSESTree.Identifier;
+};
+
+export type MethodNode = ASTNode & {
+  type: AST_NODE_TYPES.MethodDefinition;
+  key: TSESTree.Identifier;
+};
+
 // Type guard functions
 export function isDetailAnalysis(
   analysis: LayeredAnalysis
-): analysis is LayeredAnalysis & { layer: 'detail' } {
-  return analysis.layer === 'detail';
+): analysis is LayeredAnalysis & { layer: "detail" } {
+  return analysis.layer === "detail";
 }
 
 export function hasAPIDefinitions(
   component: Component
 ): component is Component & { apis: APIDefinition[] } {
-  return component.type === 'module' && !!component.apis;
+  return component.type === "module" && !!component.apis;
 }

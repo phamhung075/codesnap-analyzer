@@ -51,6 +51,9 @@
   "homepage": "https://github.com/yourusername/codesnap-analyzer#readme",
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.7",
+    "@typescript-eslint/parser": "^5.62.0",
+    "@typescript-eslint/typescript-estree": "^5.0.0",
+    "@typescript-eslint/visitor-keys": "^8.19.0",
     "commander": "^11.0.0",
     "fs-extra": "^11.1.1",
     "minimatch": "^5.1.6"
