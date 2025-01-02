@@ -2,17 +2,54 @@
 
 import { Command } from "commander";
 import { analyze, AnalyzeOptions } from "./index";
-import { LayeredAnalyzer } from "./services/layered-analyzer";
-import type { ComponentRelation, LayeredAnalysis, LayerOptions } from "./types/layer-types";
 import path from "path";
 import fs from "fs-extra";
+import { Component, ComponentRelation, LayeredAnalysis, LayerOptions } from "./types/layer-types";
+import { LayeredAnalyzer } from "./services/layered-analyzer";
 
-interface ExtendedAnalyzeOptions extends AnalyzeOptions {
-  layer?: "top" | "middle" | "detail";
-  focus?: string;
-  includeTests?: boolean;
-  maxDepth?: number; // Will be automatically converted from CLI input
-  format?: "text" | "json";
+async function handleSnapshot(directory: string, options: AnalyzeOptions) {
+  try {
+    const projectDir = path.resolve(directory);
+    let projectName = path.basename(projectDir);
+
+    try {
+      const packageJsonPath = path.join(projectDir, "package.json");
+      if (fs.existsSync(packageJsonPath)) {
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, "utf-8")
+        );
+        projectName = packageJson.name || projectName;
+      }
+    } catch {
+      projectName = path.basename(projectDir);
+    }
+
+    projectName = projectName.replace(/[^a-zA-Z0-9-_]/g, "_");
+
+    if (!options.output) {
+      const outputDir = path.join(projectDir, "codesnap");
+      await fs.ensureDir(outputDir);
+      options.output = path.join(outputDir, `${projectName}.txt`);
+    }
+
+    console.log("📸 Starting CodeSnap analysis...");
+    console.log(`📁 Project: ${projectName}`);
+    console.log(`📂 Directory: ${projectDir}`);
+    console.log(`📝 Output will be saved to: ${options.output}`);
+
+    const result = await analyze(projectDir, {
+      output: options.output,
+      exclude: options.exclude,
+      include: options.include,
+    });
+
+    console.log("\n✅ Analysis completed successfully!");
+    console.log("📊 Summary:");
+    console.log(result.summary);
+  } catch (error) {
+    console.error(`\n❌ Error: ${(error as Error).message}`);
+    process.exit(1);
+  }
 }
 
 async function main(): Promise<void> {
@@ -20,17 +57,54 @@ async function main(): Promise<void> {
 
   program
     .name("codesnap")
+    .description("Create comprehensive snapshots of your codebase")
+    .version("1.0.0");
+
+  // Default command (backward compatibility)
+  program
+    .argument("[directory]", "Directory to analyze", ".")
+    .option("-o, --output <path>", "Output file path")
+    .option("-e, --exclude <patterns...>", "Additional patterns to exclude")
+    .option("-i, --include <patterns...>", "Patterns to include")
+    .action((directory: string, options: AnalyzeOptions) => {
+      handleSnapshot(directory, options);
+    });
+
+  // Explicit snapshot command
+  program
+    .command("snapshot")
+    .description("Create a snapshot of your codebase with token counting")
+    .argument("[directory]", "Directory to analyze", ".")
+    .option("-o, --output <path>", "Output file path")
+    .option("-e, --exclude <patterns...>", "Additional patterns to exclude")
+    .option("-i, --include <patterns...>", "Patterns to include")
+    .action((directory: string, options: AnalyzeOptions) => {
+      handleSnapshot(directory, options);
+    });
+
+  
+  program
+    .name("layer")
     .description("Create a comprehensive snapshot of your codebase")
     .argument("[directory]", "Directory to analyze", ".")
     .option("-o, --output <path>", "Output file path")
     .option("-e, --exclude <patterns...>", "Additional patterns to exclude")
     .option("-i, --include <patterns...>", "Patterns to include")
-    .option("-l, --layer <depth>", "Analysis depth (top, middle, detail)", "top")
+    .option(
+      "-l, --layer <depth>",
+      "Analysis depth (top, middle, detail)",
+      "top"
+    )
     .option("-f, --focus <path>", "Path to focus detailed analysis on")
     .option("-t, --include-tests", "Include test files in analysis")
-    .option("-d, --max-depth <number>", "Maximum depth for dependency analysis", parseFloat, 3)
+    .option(
+      "-d, --max-depth <number>",
+      "Maximum depth for dependency analysis",
+      parseFloat,
+      3
+    )
     .option("--format <type>", "Output format (text, json)", "text")
-    .action(async (directory: string, options: ExtendedAnalyzeOptions) => {
+    .action(async (directory: string, options: LayerOptions) => {
       try {
         // Resolve project directory
         const projectDir = path.resolve(directory);
@@ -40,7 +114,7 @@ async function main(): Promise<void> {
           const packageJsonPath = path.join(projectDir, "package.json");
           if (fs.existsSync(packageJsonPath)) {
             const packageJson = JSON.parse(
-              fs.readFileSync(packageJsonPath, "utf-8"),
+              fs.readFileSync(packageJsonPath, "utf-8")
             );
             projectName = packageJson.name || projectName;
           }
@@ -79,7 +153,7 @@ async function main(): Promise<void> {
             maxDepth: options.maxDepth,
             exclude: options.exclude,
             include: options.include,
-            output: options.output
+            output: options.output,
           };
 
           const analyzer = new LayeredAnalyzer(projectDir, layerOptions);
@@ -97,16 +171,23 @@ async function main(): Promise<void> {
           console.log("📊 Analysis depth:", options.layer);
           console.log(`📈 Components analyzed: ${result.components.length}`);
           console.log(`🔗 Relations found: ${result.relations.length}`);
-          
+
           // Display metrics summary
           console.log("\n📊 Metrics Summary:");
-          console.log(`   Complexity: ${result.metrics.averageComplexity.toFixed(2)}`);
-          console.log(`   Cohesion: ${(result.metrics.cohesion * 100).toFixed(1)}%`);
-          console.log(`   Coupling: ${(result.metrics.coupling * 100).toFixed(1)}%`);
+          console.log(
+            `   Complexity: ${result.metrics.averageComplexity.toFixed(2)}`
+          );
+          console.log(
+            `   Cohesion: ${(result.metrics.cohesion * 100).toFixed(1)}%`
+          );
+          console.log(
+            `   Coupling: ${(result.metrics.coupling * 100).toFixed(1)}%`
+          );
           if (result.metrics.testCoverage) {
-            console.log(`   Test Coverage: ${result.metrics.testCoverage.toFixed(1)}%`);
+            console.log(
+              `   Test Coverage: ${result.metrics.testCoverage.toFixed(1)}%`
+            );
           }
-
         } else {
           // Use traditional analyzer
           const result = await analyze(projectDir, {
@@ -137,13 +218,15 @@ function formatLayeredAnalysis(analysis: LayeredAnalysis): string {
   ];
 
   // Format components
-  analysis.components.forEach((component) => {
+  analysis.components.forEach((component: Component) => {
     lines.push(`\n  ${component.name} (${component.type})`);
     lines.push(`    Path: ${component.path}`);
     lines.push(`    Complexity: ${component.complexity}`);
     lines.push(`    Dependencies: ${component.dependencies.length}`);
     if (component.maintainability) {
-      lines.push(`    Maintainability: ${component.maintainability.toFixed(2)}`);
+      lines.push(
+        `    Maintainability: ${component.maintainability.toFixed(2)}`
+      );
     }
   });
 

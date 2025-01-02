@@ -40,6 +40,9 @@ export interface LayerOptions extends AnalyzeOptions {
   focusPath?: string; // For detailed analysis of specific components
   includeTests?: boolean; // Whether to include test files in analysis
   maxDepth?: number; // Maximum depth for dependency analysis
+  layer?: "top" | "middle" | "detail";
+  focus?: string;
+  format?: "text" | "json";
 }
 
 export interface ComponentRelation {
