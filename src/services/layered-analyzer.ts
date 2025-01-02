@@ -34,19 +34,37 @@ export class LayeredAnalyzer {
     this.cache = new Map();
   }
 
+  private generateCacheKey(): string {
+    return `${this.options.depth}-${this.options.focusPath || "all"}-${Date.now()}`;
+  }
+
   async analyze(): Promise<LayeredAnalysis> {
+    const cacheKey = this.generateCacheKey();
+    const cachedResult = await this.cache.get(cacheKey);
+
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     const { files } = await this.baseAnalyzer.analyze();
 
+    let result: LayeredAnalysis;
     switch (this.options.depth) {
       case "top":
-        return this.analyzeTopLayer(files);
+        result = await this.analyzeTopLayer(files);
+        break;
       case "middle":
-        return this.analyzeMiddleLayer(files);
+        result = await this.analyzeMiddleLayer(files);
+        break;
       case "detail":
-        return this.analyzeDetailLayer(files, this.options.focusPath);
+        result = await this.analyzeDetailLayer(files, this.options.focusPath);
+        break;
       default:
         throw new Error(`Invalid analysis depth: ${this.options.depth}`);
     }
+
+    this.cache.set(cacheKey, result);
+    return result;
   }
 
   private async analyzeHighLevelRelations(
