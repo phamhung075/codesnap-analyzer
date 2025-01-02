@@ -38,3 +38,18 @@ export interface PackageJson {
   devDependencies?: Record<string, string>;
   [key: string]: unknown; // For other possible fields
 }
+
+
+export interface ComponentInfo {
+  name: string;
+  type: 'class' | 'function' | 'interface' | 'constant' | 'type';
+  description?: string;
+  methods?: string[];
+}
+
+export interface FileAnalysis {
+  path: string;
+  description?: string;
+  components: ComponentInfo[];
+}
+
