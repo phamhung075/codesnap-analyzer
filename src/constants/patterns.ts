@@ -3,6 +3,7 @@ export const DEFAULT_IGNORE_PATTERNS: ReadonlyArray<string> = [
   // Node
   "node_modules",
   "package-lock.json",
+  "pnpm-lock.yaml",
   "yarn.lock",
   ".npm",
 
