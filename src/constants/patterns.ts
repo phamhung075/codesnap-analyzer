@@ -65,4 +65,5 @@ export const DEFAULT_IGNORE_PATTERNS: ReadonlyArray<string> = [
 
   // Project specific
   "codesnap",
+  "*.tsbuildinfo",
 ] as const;
